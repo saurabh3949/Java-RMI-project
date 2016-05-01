@@ -1,7 +1,6 @@
 package PingPong;
 
 import rmi.RMIException;
-import rmi.Server;
 import rmi.Stub;
 
 import java.net.InetSocketAddress;

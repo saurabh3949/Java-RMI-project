@@ -61,37 +61,37 @@ public class Skeleton<T>
      <code>server</code> is <code>null</code>.
      */
 
-    public static void main(String[] args) {
-        InetSocketAddress address = new InetSocketAddress("localhost", 5000);
-        ServerImplementation server = new ServerImplementation();
-        Skeleton<Server> skeleton = new Skeleton(Server.class, server, address);
-        try {
-            skeleton.start();
-        } catch (RMIException e) {
-            e.printStackTrace();
-        }
-
-        Server serverStub = Stub.create(Server.class, address);
-        int answer = 0;
-        try {
-            answer = serverStub.addIntegers(10,5);
-        } catch (RMIException e) {
-            e.printStackTrace();
-        }
-        System.out.println(answer);
-
-
-        skeleton.stop();
-
-
-        try {
-            skeleton.start();
-        } catch (RMIException e) {
-            e.printStackTrace();
-        }
-        System.out.println(skeleton.getSocketAddress().getPort());
-
-    }
+//    public static void main(String[] args) {
+//        InetSocketAddress address = new InetSocketAddress("localhost", 5000);
+//        ServerImplementation server = new ServerImplementation();
+//        Skeleton<Server> skeleton = new Skeleton(Server.class, server, address);
+//        try {
+//            skeleton.start();
+//        } catch (RMIException e) {
+//            e.printStackTrace();
+//        }
+//
+//        Server serverStub = Stub.create(Server.class, address);
+//        int answer = 0;
+//        try {
+//            answer = serverStub.addIntegers(10,5);
+//        } catch (RMIException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println(answer);
+//
+//
+//        skeleton.stop();
+//
+//
+//        try {
+//            skeleton.start();
+//        } catch (RMIException e) {
+//            e.printStackTrace();
+//        }
+//        System.out.println(skeleton.getSocketAddress().getPort());
+//
+//    }
 
     public Skeleton(Class<T> c, T server)
     {
@@ -352,7 +352,7 @@ public class Skeleton<T>
                 Object result = null;
                 try {
                     result = method.invoke(serverObject, args);
-//                    out.writeObject("PASSED");
+                    out.writeObject(true);
                     Class returnType = method.getReturnType();
                     if (!returnType.equals(Void.TYPE)){
                         if (!checkInterface(returnType)){
@@ -362,14 +362,11 @@ public class Skeleton<T>
                             newSkeleton.start();
                             out.writeObject(Stub.create(returnType, newSkeleton.getSocketAddress()));
                         }
-                    } else {
-                        out.writeObject(null);
                     }
                 }
                 catch (InvocationTargetException e){
-//                    out.writeObject("FAILED");
+                    out.writeObject(false);
                     out.writeObject(e.getTargetException());
-
                 }
             }
             catch (Exception e){

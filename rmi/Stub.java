@@ -160,7 +160,7 @@ public class Stub {
                 return false;
             }
 
-            //Overiding hashCode fucntion of OBJeCT classes
+            //Overiding hashCode function of OBJeCT classes
             if(method.equals(Object.class.getMethod("hashCode")))
             {
                 return implementationClass.hashCode() * address.hashCode();
@@ -182,32 +182,41 @@ public class Stub {
                 out.writeObject(objects);
                 out.flush();
 
+                // Check if method was run successfully
+                Object isTrue = in.readObject();
+
+                if (isTrue.equals(false)) {
+                    Object error = in.readObject();
+                    in.close();
+                    out.close();
+                    socket.close();
+                    throw (Exception) error;
+                }
+
                 Object result = null;
 
-//                if(!method.getReturnType().equals(Void.TYPE))
-//                {
+                if(!method.getReturnType().equals(Void.TYPE))
+                {
                 result = in.readObject();
-//                }
+                }
 
                 in.close();
                 out.close();
                 socket.close();
+                return result;
 
-                if(result != null && result instanceof Exception) {
-                    if (method.getReturnType().isAssignableFrom(Exception.class)) return result;
-                    throw (Exception) result;
-                }
-                else
-                {
-                    return result;
-                }
+//                if(result != null && result instanceof Exception) {
+//                    if (method.getReturnType().isAssignableFrom(Exception.class)) return result;
+//                    throw (Exception) result;
+//                }
+//                else
+//                {
+//                    return result;
+//                }
             }
             catch (Exception e)
             {
-                if(Arrays.asList(method.getExceptionTypes()).contains(e.getClass()))
-                {
-                    throw e;
-                }
+                if(Arrays.asList(method.getExceptionTypes()).contains(e.getClass())) throw e;
                 throw new RMIException(e);
             }
 
