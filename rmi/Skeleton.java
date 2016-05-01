@@ -38,6 +38,7 @@ public class Skeleton<T>
     private Class<T> classObject;
     private T serverObject;
     private InetSocketAddress socketAddress;
+    private boolean addressFlag;
     private ListeningThread listeningThread;
     private ServerSocket serverListener;
     private final Set<ClientHandler> clientHandlers = new HashSet<>();
@@ -218,6 +219,7 @@ public class Skeleton<T>
 
 
         if (socketAddress == null) {
+            addressFlag = false;
             try {
                 String ip = InetAddress.getLocalHost().getHostAddress();
                 try {
@@ -232,6 +234,7 @@ public class Skeleton<T>
                 ex.printStackTrace();
             }
         } else {
+            addressFlag = true;
             try {
                 serverListener = new ServerSocket(socketAddress.getPort());
             } catch (IOException e) {
@@ -263,7 +266,7 @@ public class Skeleton<T>
             serverListener.close();
             try {
                 listeningThread.join();
-                stopped(null); // Wait for closing all the clientHandlers
+                stopped(null); // Close all workers first
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -271,6 +274,10 @@ public class Skeleton<T>
             e.printStackTrace();
         }
 
+        // Other clean Up. If user didn't provide port, don't remember the port.
+//        if (addressFlag == false) {
+//            socketAddress = null;
+//        }
 
     }
 

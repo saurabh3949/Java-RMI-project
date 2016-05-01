@@ -9,14 +9,12 @@ import java.net.InetSocketAddress;
 
 public class PingServerFactory implements PingPongFactoryInterface{
     public static void main(String[] args) {
-        if(args.length < 2) {
-            System.out.println("Expected Address, Port");
-        }
-        InetSocketAddress address = new InetSocketAddress(args[0], Integer.parseInt(args[1]));
+        InetSocketAddress address = new InetSocketAddress(Integer.parseInt(args[0]));
         PingServerFactory myFactory = new PingServerFactory();
         Skeleton<PingPongFactoryInterface> factorySkeleton = new Skeleton<PingPongFactoryInterface>(PingPongFactoryInterface.class, myFactory, address);
         try {
             factorySkeleton.start();
+            System.out.println("Factory server running!");
         } catch (RMIException e) {
             e.printStackTrace();
         }
