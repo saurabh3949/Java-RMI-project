@@ -1,5 +1,4 @@
 package rmi;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -353,9 +352,9 @@ public class Skeleton<T>
                 Object result = null;
                 try {
                     result = method.invoke(serverObject, args);
-                    out.writeObject("PASSED"); //Whyy???
+//                    out.writeObject("PASSED");
                     Class returnType = method.getReturnType();
-                    if (returnType.equals(Void.TYPE)){
+                    if (!returnType.equals(Void.TYPE)){
                         if (!checkInterface(returnType)){
                             out.writeObject(result);
                         } else {
@@ -363,15 +362,15 @@ public class Skeleton<T>
                             newSkeleton.start();
                             out.writeObject(Stub.create(returnType, newSkeleton.getSocketAddress()));
                         }
+                    } else {
+                        out.writeObject(null);
                     }
                 }
                 catch (InvocationTargetException e){
-                    out.writeObject("FAILED");
+//                    out.writeObject("FAILED");
                     out.writeObject(e.getTargetException());
 
                 }
-
-                out.writeObject(result);
             }
             catch (Exception e){
                 service_error(new RMIException(e));

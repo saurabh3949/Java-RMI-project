@@ -8,19 +8,23 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.Arrays;
 
 /**
- * Created by saurabh on 17/04/16.
+ * Created by Saurabh and Siddhartha on 17/04/16.
  */
 public class Stub {
 
     //CASE 1  class object and address
     public static<T> T create(Class<T> classObject, InetSocketAddress address){
 
-        if(classObject==null || address==null) throw new NullPointerException("Server Create Error: Either Object or Socket Address is null");
+        if(classObject==null || address==null)
+        {
+            throw new NullPointerException("Server Create Error: Either Object or Socket Address is null");
+        }
 
         validateClassObject(classObject); //would throw error for imporper interface defination
 
@@ -48,7 +52,7 @@ public class Stub {
             throw new NullPointerException("Server Create Error: Either Object or Skeleton is null");
         }
 
-        validateClassObject(classObject); //would throw error for improper interface definition
+        validateClassObject(classObject); //would throw error for imporper interface defination
 
         if(skeleton.getSocketAddress() == null)
         {
@@ -107,7 +111,7 @@ public class Stub {
     {
         for(Method m: classObject.getMethods())
         {
-            if(Arrays.asList(m.getExceptionTypes()).contains(RMIException.class) != true)
+            if(!Arrays.asList(m.getExceptionTypes()).contains(RMIException.class))
             {
                 throw new Error("Method "+ m.getName() + " of the class " + classObject.getCanonicalName()
                         + " doesn't throw RMIException. (Requirement of a remote interface)");
@@ -115,19 +119,14 @@ public class Stub {
         }
         return true;
     }
-
+/*
     public static void main(String[] args) {
         InetSocketAddress address = new InetSocketAddress("localhost", 5000);
         Server server = Stub.create(Server.class, address);
-        int answer = 0;
-        try {
-            answer = server.addIntegers(10,5);
-        } catch (RMIException e) {
-            e.printStackTrace();
-        }
+        int answer = server.addIntegers(5,5);
         System.out.println(answer);
     }
-
+*/
 
     private static class MyInvocationHandler<T> implements InvocationHandler, Serializable {
         private InetSocketAddress address;
@@ -155,12 +154,13 @@ public class Stub {
             if(method.equals(Object.class.getMethod("equals", Object.class)))
             {
                 if (args[0] instanceof Proxy) {
-                    MyInvocationHandler handler = (MyInvocationHandler) Proxy.getInvocationHandler((Proxy) args[0]);
-                    return (implementationClass.equals(handler.getImplementationClass()) && address.equals(handler.getImplementationAddress()));
+                    MyInvocationHandler second_handler = (MyInvocationHandler) Proxy.getInvocationHandler(args[0]);
+                    return (implementationClass.equals(second_handler.getImplementationClass()) && address.equals(second_handler.getImplementationAddress()));
                 }
                 return false;
             }
 
+            //Overiding hashCode fucntion of OBJeCT classes
             if(method.equals(Object.class.getMethod("hashCode")))
             {
                 return implementationClass.hashCode() * address.hashCode();
@@ -175,36 +175,32 @@ public class Stub {
             {
                 Socket socket = new Socket(address.getHostName(), address.getPort());
                 ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
                 Class params[] = method.getParameterTypes();
                 Object[] objects = new Object[]{method.getName(), args, params};
                 out.writeObject(objects);
                 out.flush();
 
-                ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-                Object call_success = in.readObject();
-
-                if(call_success.equals("FAILED"))
-                {
-                    Object what_error =  in.readObject();
-                    in.close();
-                    out.close();
-                    socket.close();
-                    throw (Exception) what_error;
-                }
-
                 Object result = null;
 
-                if(!method.getReturnType().equals(Void.TYPE))
-                {
-                    result = in.readObject();
-                }
+//                if(!method.getReturnType().equals(Void.TYPE))
+//                {
+                result = in.readObject();
+//                }
 
                 in.close();
                 out.close();
                 socket.close();
-                return result;
 
+                if(result != null && result instanceof Exception) {
+                    if (method.getReturnType().isAssignableFrom(Exception.class)) return result;
+                    throw (Exception) result;
+                }
+                else
+                {
+                    return result;
+                }
             }
             catch (Exception e)
             {
